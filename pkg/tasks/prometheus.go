@@ -191,6 +191,26 @@ func (t *PrometheusTask) Run() error {
 		return errors.Wrap(err, "initializing Prometheus kube-controllers ServiceMonitor failed")
 	}
 
+	smam, err := t.factory.ApplicationsMonitoringServiceMonitor()
+	if err != nil {
+		return errors.Wrap(err, "initializing Applications Monitoring ServiceMonitor failed")
+	}
+
+	err = t.client.CreateOrUpdateServiceMonitor(smam)
+	if err != nil {
+		return errors.Wrap(err, "reconciling Applications Monitoring ServiceMonitor failed")
+	}
+
+	smac, err := t.factory.ActuatorServiceMonitor()
+	if err != nil {
+		return errors.Wrap(err, "initializing Actuator ServiceMonitor failed")
+	}
+
+	err = t.client.CreateOrUpdateServiceMonitor(smac)
+	if err != nil {
+		return errors.Wrap(err, "reconciling Actuator ServiceMonitor failed")
+	}
+
 	err = t.client.CreateOrUpdateServiceMonitor(smkc)
 	if err != nil {
 		return errors.Wrap(err, "reconciling Prometheus kube-controllers ServiceMonitor failed")

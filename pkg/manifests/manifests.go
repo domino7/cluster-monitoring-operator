@@ -82,6 +82,8 @@ var (
 	PrometheusK8sEtcdEndpoints                 = "assets/prometheus-k8s/endpoints-etcd.yaml"
 	PrometheusK8sEtcdCerts                     = "assets/prometheus-k8s/secret-etcd-certs.yaml"
 	PrometheusK8sEtcdServiceMonitor            = "assets/prometheus-k8s/service-monitor-etcd.yaml"
+	PrometheusK8sApplicationsServiceMonitor    = "assets/prometheus-k8s/service-monitor-applications-monitoring.yaml"
+	PrometheusK8sActuatorServiceMonitor        = "assets/prometheus-k8s/service-monitor-actuator.yaml"
 
 	PrometheusOperatorClusterRoleBinding = "assets/prometheus-operator/cluster-role-binding.yaml"
 	PrometheusOperatorClusterRole        = "assets/prometheus-operator/cluster-role.yaml"
@@ -110,9 +112,8 @@ var (
 )
 
 var (
-	PrometheusConfigReloaderFlag    = "--prometheus-config-reloader="
-	ConfigReloaderImageFlag         = "--config-reloader-image="
-	PrometheusOperatorNamespaceFlag = "--namespace="
+	PrometheusConfigReloaderFlag = "--prometheus-config-reloader="
+	ConfigReloaderImageFlag      = "--config-reloader-image="
 
 	AuthProxyExternalURLFlag  = "-external-url="
 	AuthProxyCookieDomainFlag = "-cookie-domain="
@@ -802,6 +803,28 @@ func (f *Factory) PrometheusOperatorServiceMonitor() (*monv1.ServiceMonitor, err
 	return sm, nil
 }
 
+func (f *Factory) ApplicationsMonitoringServiceMonitor() (*monv1.ServiceMonitor, error) {
+	sm, err := f.NewServiceMonitor(MustAssetReader(PrometheusK8sApplicationsServiceMonitor))
+	if err != nil {
+		return nil, err
+	}
+
+	sm.Namespace = f.namespace
+
+	return sm, nil
+}
+
+func (f *Factory) ActuatorServiceMonitor() (*monv1.ServiceMonitor, error) {
+	sm, err := f.NewServiceMonitor(MustAssetReader(PrometheusK8sActuatorServiceMonitor))
+	if err != nil {
+		return nil, err
+	}
+
+	sm.Namespace = f.namespace
+
+	return sm, nil
+}
+
 func (f *Factory) PrometheusOperatorClusterRoleBinding() (*rbacv1beta1.ClusterRoleBinding, error) {
 	crb, err := f.NewClusterRoleBinding(MustAssetReader(PrometheusOperatorClusterRoleBinding))
 	if err != nil {
@@ -850,9 +873,6 @@ func (f *Factory) PrometheusOperatorDeployment() (*appsv1.Deployment, error) {
 
 	args := d.Spec.Template.Spec.Containers[0].Args
 	for i := range args {
-		if strings.HasPrefix(args[i], PrometheusOperatorNamespaceFlag) {
-			args[i] = PrometheusOperatorNamespaceFlag + f.namespace
-		}
 
 		if strings.HasPrefix(args[i], PrometheusConfigReloaderFlag) && f.config.PrometheusOperatorConfig.PrometheusConfigReloader != "" {
 			image, err := imageFromString(strings.TrimSuffix(args[i], PrometheusConfigReloaderFlag))

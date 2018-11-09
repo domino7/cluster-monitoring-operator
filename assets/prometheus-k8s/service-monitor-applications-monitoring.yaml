@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: applications-monitoring
+  name: applications-monitoring
+spec:
+  endpoints:
+  - port: metrics
+  jobLabel: k8s-app
+  namespaceSelector:
+    any: true
+  selector:
+    any: true

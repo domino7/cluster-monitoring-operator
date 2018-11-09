@@ -20,7 +20,6 @@ spec:
       - image: quay.io/coreos/cluster-monitoring-operator:v0.0.6
         name: cluster-monitoring-operator
         args:
-        - "-namespace=openshift-monitoring"
         - "-configmap=cluster-monitoring-config"
         - "-logtostderr=true"
         - "-v=4"

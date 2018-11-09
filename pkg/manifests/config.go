@@ -148,7 +148,7 @@ func (c *Config) applyDefaults() {
 		c.PrometheusK8sConfig.BaseImage = "quay.io/prometheus/prometheus"
 	}
 	if c.PrometheusK8sConfig.Retention == "" {
-		c.PrometheusK8sConfig.Retention = "15d"
+		c.PrometheusK8sConfig.Retention = "30d"
 	}
 	if c.PrometheusK8sConfig.Resources == nil {
 		c.PrometheusK8sConfig.Resources = &v1.ResourceRequirements{}

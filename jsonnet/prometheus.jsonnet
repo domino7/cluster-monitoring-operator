@@ -144,6 +144,59 @@ local namespacesRole = policyRule.new() +
         },
       },
 
+    serviceMonitorApplicationsMonitoring:
+          {
+            apiVersion: 'monitoring.coreos.com/v1',
+            kind: 'ServiceMonitor',
+            metadata: {
+              labels: {
+                'k8s-app': 'applications-monitoring',
+              },
+              name: 'applications-monitoring',
+            },
+            spec: {
+              endpoints: [
+                {
+                  port: 'metrics',
+                },
+              ],
+              jobLabel: 'k8s-app',
+              namespaceSelector: {
+                any: true,
+              },
+              selector: {
+                any: true,
+              },
+            },
+          },
+
+    serviceMonitorActuator:
+          {
+            apiVersion: 'monitoring.coreos.com/v1',
+            kind: 'ServiceMonitor',
+            metadata: {
+              labels: {
+                'k8s-app': 'actuator-metrics',
+              },
+              name: 'actuator-metrics',
+            },
+            spec: {
+              endpoints: [
+                {
+                  port: 'actuator',
+                  path: '/actuator/prometheus'
+                },
+              ],
+              jobLabel: 'k8s-app',
+              namespaceSelector: {
+                any: true,
+              },
+              selector: {
+                any: true,
+              },
+            },
+          },
+
     // The proxy secret is there to encrypt session created by the oauth proxy.
 
     proxySecret:
@@ -266,8 +319,20 @@ local namespacesRole = policyRule.new() +
             'prometheus-k8s-proxy',
             'prometheus-k8s-htpasswd',
           ],
-          serviceMonitorSelector: selector.withMatchExpressions({ key: 'k8s-app', operator: 'Exists' }),
-          serviceMonitorNamespaceSelector: selector.withMatchExpressions({ key: 'openshift.io/cluster-monitoring', operator: 'Exists' }),
+          serviceMonitorSelector: {
+            any: true,
+          },
+          serviceMonitorNamespaceSelector: {
+            any: true,
+          },
+          ruleSelector: {
+            any: true,
+          },
+          ruleNamespaceSelector: {
+            any: true,
+          },
+          replicas: 2,
+          retention: '30d',
           listenLocal: true,
           containers: [
             {

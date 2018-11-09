@@ -67,10 +67,11 @@ spec:
     beta.kubernetes.io/os: linux
   replicas: 2
   resources: {}
+  retention: 30d
+  ruleNamespaceSelector:
+    any: true
   ruleSelector:
-    matchLabels:
-      prometheus: k8s
-      role: alert-rules
+    any: true
   secrets:
   - kube-etcd-client-certs
   - prometheus-k8s-tls
@@ -79,11 +80,7 @@ spec:
   securityContext: {}
   serviceAccountName: prometheus-k8s
   serviceMonitorNamespaceSelector:
-    matchExpressions:
-    - key: openshift.io/cluster-monitoring
-      operator: Exists
+    any: true
   serviceMonitorSelector:
-    matchExpressions:
-    - key: k8s-app
-      operator: Exists
+    any: true
   version: v2.3.2

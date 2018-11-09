@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: actuator-metrics
+  name: actuator-metrics
+spec:
+  endpoints:
+  - path: /actuator/prometheus
+    port: actuator
+  jobLabel: k8s-app
+  namespaceSelector:
+    any: true
+  selector:
+    any: true

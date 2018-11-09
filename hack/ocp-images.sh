@@ -97,7 +97,6 @@ spec:
       - image: quay.io/coreos/cluster-monitoring-operator-dev:$(git rev-parse --short HEAD)
         name: cluster-monitoring-operator
         args:
-        - "-namespace=openshift-monitoring"
         - "-configmap=cluster-monitoring-config"
         - "-logtostderr=true"
         - "-v=4"
