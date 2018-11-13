@@ -1,5 +1,70 @@
 # Cluster Monitoring Operator
 
+## Modifications in default setup
+Default setup of CMO was modified to achieve:
+* monitoring metrics from applications (by default CMO is monitoring only infrastructure components)
+* self-service capabilities for alerts
+* minimize additional reconfiguration required to migrate from previous Prometheus setup for application teams
+* ensure high-availability
+
+Required modifications in CMO image (from playbook in openshift-ansible, release-3.11):
+
+* remove ```- "-namespace=openshift-monitoring"``` flag in CMO configuration. 
+It is passed to Prometheus Operator to limit scope of monitoring (in terms of CRDs discovery) to single 
+```openshift-monitoring``` namespace. Default monitoring scope in Prometheus Operator is ```NamespaceAll```.
+* reconfigure Prometheus setup to accept all existing PrometheusRules, ServiceMonitors (from entire cluster):
+```
+ruleNamespaceSelector:
+  any: true
+ruleSelector:
+  any: true
+serviceMonitorNamespaceSelector:
+  any: true 
+serviceMonitorSelector:
+  any: true
+```
+* add Service Monitors to read metrics exposed on ```/metrics``` and ```/actuator/prometheus``` endpoints by default
+* remove Prometheus resource limits
+
+Additional modifications provided in playbook (not in CMO image itself):
+* prometheus storage type in PVC
+```
+{% if openshift_cluster_monitoring_operator_prometheus_storage_class_enabled | bool %}
+          storageClassName: {{ openshift_cluster_monitoring_operator_prometheus_storage_class_name }}
+{% endif %}
+```
+* permissions to scrape metrics, read CRDs from entire cluster
+```
+- apiVersion: v1
+  kind: ClusterRole
+  metadata:
+    name: prometheus-k8s-apps
+  rules:
+  - apiGroups: [""]
+    resources:
+    - nodes
+    - services
+    - endpoints
+    - pods
+    - prometheusrules
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+    - configmaps
+    verbs: ["get"]
+```
+* loading alertmanager from template (by default config is hardcoded, what is insufficient for cluster-specific setup)
+
+Recommended extensions in default CMO playbook in openshift-ansible, handling our requirements:
+
+* additional flag to turn on/off limiting monitoring scope to single namespace 
+* add possibility to pass configuration of prometheus-k8s (default prometheus cluster) the same way as 
+it is done for AlertManager (configuration is useed to create ```alertmanager-main``` secret, 
+which is passed to AlertManager stateful-set)
+* extend permissions to monitor entire cluster
+* add possibility to configure additional service-monitors within setup (optional, they could be added as post-installation step)
+
+## Overwiev
 The Cluster Monitoring Operator manages and updates the Prometheus-based monitoring stack deployed on top of OpenShift.
 
 It contains the following components:
